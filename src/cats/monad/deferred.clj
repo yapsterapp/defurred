@@ -67,8 +67,17 @@
    (let [ed (d/deferred)]
      (d/on-realized
       d
-      (fn [v] (either/right v))
-      (fn [x] (either/left (error-transformer x)))))))
+      (fn [v] (d/success! ed (either/right v)))
+      (fn [x] (d/success! ed (either/left (error-transformer x)))))
+     ed)))
 
 (def either-deferred-monad
   (either/either-transformer deferred-monad))
+
+(defn deferred-left
+  [v]
+  (with-value (either/left v)))
+
+(defn deferred-right
+  [v]
+  (with-value (either/right v)))
