@@ -1,4 +1,4 @@
-(defproject defurred "0.0.1"
+(defproject defurred "0.0.2"
   :description "A Manifold Deferred monad for Cats"
   :url "https://github.com/employeerepublic/defurred"
   :license {:name "Eclipse Public License"
