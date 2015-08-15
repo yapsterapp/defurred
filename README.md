@@ -74,6 +74,33 @@ for compact and comprehensible async implementations :
 ;; => #<Left [Some error]>
 ```
 
+_Deferred_ is an applicative functor and works with the new applicative-do
+syntax in _cats_ 0.7.0, which allows for efficient concurrent execution of
+independent steps of a computation :
+
+```
+(defn sleep-deferred [wait]
+  (let [d (d/deferred)]
+    (future
+      (Thread/sleep wait)
+      (d/success! d wait))
+      d))
+
+(time
+ @(m/mlet [x (sleep-deferred 42)
+           y (sleep-deferred 41)]
+    (m/return (+ x y))))
+;; "Elapsed time: 86.431746 msecs"
+;; 83
+
+(time
+ @(m/alet [x (sleep-deferred 42)
+           y (sleep-deferred 41)]
+    (+ x y)))
+;; "Elapsed time: 44.013364 msecs"
+;; 83
+
+```
 
 
 ## License
