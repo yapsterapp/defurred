@@ -17,15 +17,11 @@
   (reify
     proto/Functor
     (fmap [mn f mv]
-      (let [ctx (ctx/get-current mv)
-            d (d/deferred)]
-        (d/on-realized
-         mv
-         (fn [v] (d/success!
-                  d
-                  (m/with-monad ctx (f v))))
-         (fn [x] (d/error! d x)))
-        d))
+      (let [ctx (ctx/get-current mv)]
+        (d/chain mv
+                 (fn [v]
+                   (m/with-monad ctx
+                     (f v))))))
 
     proto/Applicative
     (pure [_ v]
@@ -41,6 +37,10 @@
       (with-value v))
 
     (mbind [mn mv f]
+      ;; works with chain because Deferred impl
+      ;; itself collects the result from the
+      ;; Deferred delivered by (f v) and delivers
+      ;; it to the chain
       (let [ctx (ctx/get-current mv)]
         (d/chain mv
                  (fn [v]
