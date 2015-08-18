@@ -8,9 +8,12 @@
 (defn with-value
   "wrap a value in a Deferred"
   [v]
-  (let [d (d/deferred)]
-    (d/success! d v)
-    d))
+  (d/success-deferred v))
+
+(defn with-error
+  "wrap failure data in a Deferred"
+  [e]
+  (d/error-deferred e))
 
 (def ^{:no-doc true}
   deferred-monad
