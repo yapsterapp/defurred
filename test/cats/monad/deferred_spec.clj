@@ -69,3 +69,20 @@
 
       (t/is (= (either/right 3) @r1))
       (t/is (= (either/left :foo) @r2)))))
+
+(t/deftest timeout-tests
+  (let [tm (dm/timeout-deferred-monad 10)
+        t (m/with-monad tm
+            (m/bind (m/return :foo)
+                    (fn [v]
+                      (manifold.deferred/future
+                        (Thread/sleep 5)
+                        v))))
+        t2 (m/with-monad tm
+             (m/bind (m/return :foo)
+                     (fn [v]
+                       (manifold.deferred/future
+                         (Thread/sleep 15)
+                         v))))]
+    (t/is (= :foo (try @t (catch Exception e :argh))))
+    (t/is (= :argh (try @t2 (catch Exception e :argh))))))

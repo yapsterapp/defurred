@@ -15,25 +15,35 @@
   [e]
   (d/error-deferred e))
 
-(def ^{:no-doc true}
-  deferred-monad
+(defn with-timeout
+  [timeout d]
+  (when timeout
+    (d/timeout! d timeout))
+  d)
+
+(defn timeout-deferred-monad
+  [timeout]
   (reify
     proto/Functor
     (fmap [mn f mv]
       (let [ctx (ctx/get-current mv)]
-        (d/chain mv
-                 (fn [v]
-                   (m/with-monad ctx
-                     (f v))))))
+        (with-timeout
+          timeout
+          (d/chain mv
+                   (fn [v]
+                     (m/with-monad ctx
+                       (f v)))))))
 
     proto/Applicative
     (pure [_ v]
       (with-value v))
 
     (fapply [mn af av]
-      (d/chain af
-               (fn [afv]
-                 (proto/fmap mn afv av))))
+      (with-timeout
+        timeout
+        (d/chain af
+                 (fn [afv]
+                   (proto/fmap mn afv av)))))
 
     proto/Monad
     (mreturn [_ v]
@@ -45,10 +55,14 @@
       ;; Deferred delivered by (f v) and delivers
       ;; it to the chain
       (let [ctx (ctx/get-current mv)]
-        (d/chain mv
-                 (fn [v]
-                   (m/with-monad ctx
-                     (f v))))))))
+        (with-timeout
+          timeout
+          (d/chain mv
+                   (fn [v]
+                     (m/with-monad ctx
+                       (f v)))))))))
+
+(def deferred-monad (timeout-deferred-monad nil))
 
 (extend-type manifold.deferred.Deferred
   proto/Context
